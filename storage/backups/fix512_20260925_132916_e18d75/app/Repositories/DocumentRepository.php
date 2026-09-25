@@ -154,11 +154,4 @@ final class DocumentRepository
         $stmt = $this->pdo->prepare('DELETE FROM document_permissions WHERE document_id = :document_id AND user_id = :user_id');
         $stmt->execute(['document_id' => $documentId, 'user_id' => $userId]);
     }
-
-    public function trashedForWorkspace(int $workspaceId): array
-    {
-        $stmt = $this->pdo->prepare('SELECT d.*, c.name AS collection_name FROM documents d LEFT JOIN collections c ON c.id=d.collection_id WHERE d.workspace_id=:w AND d.deleted_at IS NOT NULL ORDER BY d.deleted_at DESC');
-        $stmt->execute(['w'=>$workspaceId]);
-        return $stmt->fetchAll() ?: [];
-    }
 }

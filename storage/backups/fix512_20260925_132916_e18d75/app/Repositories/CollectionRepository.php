@@ -133,11 +133,4 @@ final class CollectionRepository
         );
         $stmt->execute(['collection_id' => $collectionId, 'user_id' => $userId]);
     }
-
-    public function trashedForWorkspace(int $workspaceId): array
-    {
-        $stmt=$this->pdo->prepare('SELECT * FROM collections WHERE workspace_id=:w AND deleted_at IS NOT NULL ORDER BY deleted_at DESC');
-        $stmt->execute(['w'=>$workspaceId]);
-        return $stmt->fetchAll() ?: [];
-    }
 }

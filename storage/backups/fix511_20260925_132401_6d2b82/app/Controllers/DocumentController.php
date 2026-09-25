@@ -24,7 +24,7 @@ final class DocumentController extends BaseController
     private function cols(): CollectionRepository { return new CollectionRepository($this->pdo()); }
     private function tags(): TagRepository { return new TagRepository($this->pdo()); }
     private function md(): MarkdownService { return new MarkdownService(); }
-    private function resolver(): PermissionResolver { $pdo = $this->pdo(); return new PermissionResolver(new WorkspaceRepository($pdo), new \Archium\Repositories\AclRepository($pdo), new \Archium\Repositories\GroupRepository($pdo)); }
+    private function resolver(): PermissionResolver { $pdo = $this->pdo(); return new PermissionResolver(new WorkspaceRepository($pdo), new CollectionRepository($pdo), new DocumentRepository($pdo)); }
 
     public function index(): string
     {
