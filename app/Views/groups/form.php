@@ -1,0 +1,5 @@
+<h1><?= $group?'Modifica gruppo':'Nuovo gruppo' ?></h1>
+<form method="post" action="<?= $group?'/groups/'.(int)$group['id'].'/update':'/groups' ?>" class="card form-card"><?= \Archium\Support\Csrf::field() ?>
+<label>Nome gruppo</label><input name="name" value="<?= e($group['name']??'') ?>" required minlength="2" maxlength="150">
+<label>Descrizione</label><input name="description" value="<?= e($group['description']??'') ?>" maxlength="500">
+<h2>Membri del gruppo</h2><p class="muted">Puoi selezionare solo utenti già membri del workspace.</p><div class="checkbox-list"><?php foreach($members as $member): ?><label class="checkbox-row"><input type="checkbox" name="user_ids[]" value="<?= (int)$member['user_id'] ?>" <?= in_array((int)$member['user_id'],$selected,true)?'checked':'' ?>><span><strong><?= e($member['name']) ?></strong><small><?= e($member['email']) ?> · <?= e($member['role']) ?></small></span></label><?php endforeach; ?></div><button type="submit"><?= $group?'Salva gruppo':'Crea gruppo' ?></button></form><p><a href="/groups">Torna ai gruppi</a></p>

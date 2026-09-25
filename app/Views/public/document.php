@@ -1,0 +1,3 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title><?= e($pageTitle) ?> — <?= e($config['app']['name'] ?? 'Archium') ?></title><link rel="stylesheet" href="/assets/css/app.css"></head>
+<body><main class="wrap public-document"><p class="muted">Documento condiviso da <?= e($document['workspace_name']) ?></p><h1><?= e($document['title']) ?></h1><p class="muted">Aggiornato: <?= e((string)$document['updated_at']) ?></p><div class="card doc-content"><?= $html ?></div></main></body></html>

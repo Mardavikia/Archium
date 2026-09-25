@@ -1,0 +1,104 @@
+<?php
+declare(strict_types=1);
+
+/** @var \Archium\Support\Router $router */
+
+use Archium\Controllers\AttachmentController;
+use Archium\Controllers\AuthController;
+use Archium\Controllers\CollectionController;
+use Archium\Controllers\DashboardController;
+use Archium\Controllers\DocumentController;
+use Archium\Controllers\FavoriteController;
+use Archium\Controllers\HomeController;
+use Archium\Controllers\MemberController;
+use Archium\Controllers\MigrateController;
+use Archium\Controllers\PermissionController;
+use Archium\Controllers\PublicLinkController;
+use Archium\Controllers\RevisionController;
+use Archium\Controllers\SearchController;
+use Archium\Controllers\SetupController;
+use Archium\Controllers\TagController;
+use Archium\Controllers\TrashController;
+use Archium\Controllers\UserAdminController;
+use Archium\Controllers\WorkspaceController;
+use Archium\Middleware\RequireAuth;
+use Archium\Middleware\RequireGuest;
+
+$router->get('/', [HomeController::class, 'index']);
+$router->get('/migrate', [MigrateController::class, 'show']);
+$router->post('/migrate/run', [MigrateController::class, 'run']);
+$router->get('/setup', [SetupController::class, 'show']);
+$router->post('/setup', [SetupController::class, 'store']);
+
+$router->get('/register', [AuthController::class, 'showRegister'], [RequireGuest::class]);
+$router->post('/register', [AuthController::class, 'register'], [RequireGuest::class]);
+$router->get('/login', [AuthController::class, 'showLogin'], [RequireGuest::class]);
+$router->post('/login', [AuthController::class, 'login'], [RequireGuest::class]);
+$router->get('/forgot-password', [AuthController::class, 'showForgot'], [RequireGuest::class]);
+$router->post('/forgot-password', [AuthController::class, 'sendReset'], [RequireGuest::class]);
+$router->get('/reset-password', [AuthController::class, 'showReset'], [RequireGuest::class]);
+$router->post('/reset-password', [AuthController::class, 'resetPassword'], [RequireGuest::class]);
+$router->get('/verify-email/notice', [AuthController::class, 'verifyNotice'], [RequireGuest::class]);
+$router->get('/verify-email', [AuthController::class, 'verifyEmail']);
+
+$router->get('/public/{token}', [PublicLinkController::class, 'showPublic']);
+
+$router->post('/logout', [AuthController::class, 'logout'], [RequireAuth::class]);
+$router->get('/dashboard', [DashboardController::class, 'index'], [RequireAuth::class]);
+$router->get('/workspaces', [WorkspaceController::class, 'index'], [RequireAuth::class]);
+$router->get('/workspaces/create', [WorkspaceController::class, 'create'], [RequireAuth::class]);
+$router->post('/workspaces', [WorkspaceController::class, 'store'], [RequireAuth::class]);
+$router->post('/workspaces/{id}/select', [WorkspaceController::class, 'select'], [RequireAuth::class]);
+$router->get('/workspaces/{id}/edit', [WorkspaceController::class, 'edit'], [RequireAuth::class]);
+$router->post('/workspaces/{id}/update', [WorkspaceController::class, 'update'], [RequireAuth::class]);
+$router->get('/workspaces/{id}/members', [MemberController::class, 'index'], [RequireAuth::class]);
+$router->post('/workspaces/{id}/members/add', [MemberController::class, 'add'], [RequireAuth::class]);
+$router->post('/workspaces/{id}/members/{memberId}/update', [MemberController::class, 'update'], [RequireAuth::class]);
+$router->post('/workspaces/{id}/members/{memberId}/remove', [MemberController::class, 'remove'], [RequireAuth::class]);
+
+$router->get('/collections', [CollectionController::class, 'index'], [RequireAuth::class]);
+$router->get('/collections/create', [CollectionController::class, 'create'], [RequireAuth::class]);
+$router->post('/collections', [CollectionController::class, 'store'], [RequireAuth::class]);
+$router->get('/collections/{id}/edit', [CollectionController::class, 'edit'], [RequireAuth::class]);
+$router->post('/collections/{id}/update', [CollectionController::class, 'update'], [RequireAuth::class]);
+$router->post('/collections/{id}/delete', [CollectionController::class, 'destroy'], [RequireAuth::class]);
+$router->get('/collections/{id}/permissions', [PermissionController::class, 'collectionIndex'], [RequireAuth::class]);
+$router->post('/collections/{id}/permissions/grant', [PermissionController::class, 'grantCollection'], [RequireAuth::class]);
+$router->post('/collections/{id}/permissions/{userId}/revoke', [PermissionController::class, 'revokeCollection'], [RequireAuth::class]);
+
+$router->get('/search', [SearchController::class, 'index'], [RequireAuth::class]);
+$router->get('/tags', [TagController::class, 'index'], [RequireAuth::class]);
+$router->get('/favorites', [FavoriteController::class, 'index'], [RequireAuth::class]);
+$router->get('/trash', [TrashController::class, 'index'], [RequireAuth::class]);
+$router->post('/trash/documents/{id}/restore', [TrashController::class, 'restoreDocument'], [RequireAuth::class]);
+$router->post('/trash/documents/{id}/purge', [TrashController::class, 'purgeDocument'], [RequireAuth::class]);
+$router->post('/trash/collections/{id}/restore', [TrashController::class, 'restoreCollection'], [RequireAuth::class]);
+$router->post('/trash/collections/{id}/purge', [TrashController::class, 'purgeCollection'], [RequireAuth::class]);
+
+$router->get('/documents', [DocumentController::class, 'index'], [RequireAuth::class]);
+$router->get('/documents/create', [DocumentController::class, 'create'], [RequireAuth::class]);
+$router->post('/documents', [DocumentController::class, 'store'], [RequireAuth::class]);
+$router->get('/documents/{id}/edit', [DocumentController::class, 'edit'], [RequireAuth::class]);
+$router->post('/documents/{id}/update', [DocumentController::class, 'update'], [RequireAuth::class]);
+$router->post('/documents/{id}/delete', [DocumentController::class, 'destroy'], [RequireAuth::class]);
+$router->post('/documents/{id}/favorite', [FavoriteController::class, 'toggle'], [RequireAuth::class]);
+$router->post('/documents/{id}/attachments', [AttachmentController::class, 'upload'], [RequireAuth::class]);
+$router->get('/documents/{id}/revisions', [RevisionController::class, 'index'], [RequireAuth::class]);
+$router->get('/documents/{id}/revisions/{num}', [RevisionController::class, 'show'], [RequireAuth::class]);
+$router->post('/documents/{id}/revisions/{num}/restore', [RevisionController::class, 'restore'], [RequireAuth::class]);
+$router->get('/documents/{id}/permissions', [PermissionController::class, 'documentIndex'], [RequireAuth::class]);
+$router->post('/documents/{id}/permissions/grant', [PermissionController::class, 'grantDocument'], [RequireAuth::class]);
+$router->post('/documents/{id}/permissions/{userId}/revoke', [PermissionController::class, 'revokeDocument'], [RequireAuth::class]);
+$router->get('/documents/{id}/shares', [PublicLinkController::class, 'index'], [RequireAuth::class]);
+$router->post('/documents/{id}/shares/create', [PublicLinkController::class, 'create'], [RequireAuth::class]);
+$router->post('/documents/{id}/shares/{linkId}/revoke', [PublicLinkController::class, 'revoke'], [RequireAuth::class]);
+$router->get('/documents/{id}', [DocumentController::class, 'show'], [RequireAuth::class]);
+
+$router->get('/attachments/{id}/download', [AttachmentController::class, 'download'], [RequireAuth::class]);
+$router->post('/attachments/{id}/delete', [AttachmentController::class, 'delete'], [RequireAuth::class]);
+$router->get('/attachments/{id}', [AttachmentController::class, 'stream'], [RequireAuth::class]);
+
+$router->get('/admin/users', [UserAdminController::class, 'index'], [RequireAuth::class]);
+$router->post('/admin/users/create', [UserAdminController::class, 'create'], [RequireAuth::class]);
+$router->post('/admin/users/{id}/role', [UserAdminController::class, 'updateRole'], [RequireAuth::class]);
+$router->post('/admin/users/{id}/status', [UserAdminController::class, 'updateStatus'], [RequireAuth::class]);

@@ -1,0 +1,19 @@
+Options -Indexes
+RewriteEngine On
+
+# Forza HTTPS — DISATTIVATO IN LOCALE, decommentare su Aruba
+# RewriteCond %{HTTPS} off
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Blocca file sensibili
+<FilesMatch "\.(sql|log|ini|sh|bak|md)$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Front controller
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L]

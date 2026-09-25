@@ -1,0 +1,42 @@
+<?php /** @var string $content */ ?>
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?= e(trim(($pageTitle ?? '') . ' — ' . ($config['app']['name'] ?? 'Archium'), ' —')) ?></title>
+<link rel="stylesheet" href="/assets/css/app.css">
+<script src="/assets/js/editor.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+    <strong><a class="brand" href="/"><?= e($config['app']['name'] ?? 'Archium') ?></a></strong>
+    <nav class="nav">
+        <?php if (!empty($currentUser)): ?>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/documents">Documenti</a>
+            <a href="/collections">Raccolte</a>
+            <a href="/search">Ricerca</a>
+            <a href="/favorites">Preferiti</a>
+            <a href="/workspaces">Workspace</a>
+            <span class="muted"><?= e($currentUser['name']) ?></span>
+            <form method="post" action="/logout" class="inline-form">
+                <?= \Archium\Support\Csrf::field() ?>
+                <button type="submit" class="linklike">Esci</button>
+            </form>
+        <?php else: ?>
+            <a href="/login">Accedi</a>
+            <a href="/register">Registrati</a>
+        <?php endif; ?>
+    </nav>
+</header>
+<main class="wrap">
+    <?php if ($f = pull_flash()): ?>
+        <div class="flash <?= $f['type'] === 'success' ? 'flash-ok' : 'flash-ko' ?>">
+            <?= e($f['message']) ?>
+        </div>
+    <?php endif; ?>
+    <?= $content ?>
+</main>
+</body>
+</html>

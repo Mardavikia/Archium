@@ -1,0 +1,13 @@
+Options -Indexes
+RewriteEngine On
+
+# Forza HTTPS — DISATTIVATO IN LOCALE, decommentare su Aruba
+# RewriteCond %{HTTPS} off
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Nega accesso diretto alle cartelle interne
+RewriteRule ^(app|config|database|routes|storage|vendor)(/|$) - [F,L]
+
+# Tutto il resto passa da public/
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^(.*)$ public/$1 [L]
