@@ -1,111 +1,18 @@
 <?php
 declare(strict_types=1);
-
 namespace Archium\Controllers;
-
-use Archium\Repositories\UserRepository;
-use Archium\Repositories\WorkspaceMemberRepository;
 use Archium\Repositories\WorkspaceRepository;
+use Archium\Repositories\WorkspaceMemberRepository;
+use Archium\Repositories\GroupRepository;
 use Archium\Support\Auth;
 use Archium\Support\Csrf;
 use Archium\Support\Database;
-
-final class MemberController extends BaseController
-{
-    private function workspace(int $id): array
-    {
-        $workspace = (new WorkspaceRepository(Database::connection($this->config)))->findActive($id);
-        if ($workspace === null) {
-            http_response_code(404);
-            exit('Workspace non trovato.');
-        }
-        $user = Auth::user($this->config);
-        $role = (new WorkspaceRepository(Database::connection($this->config)))->roleOf($id, (int) $user['id']);
-        if ($role !== 'owner') {
-            http_response_code(403);
-            exit('Solo il proprietario del workspace può gestire i membri.');
-        }
-        return $workspace;
-    }
-
-    public function index(string $id): string
-    {
-        $workspace = $this->workspace((int) $id);
-        return $this->view('members/index', [
-            'pageTitle' => 'Membri — ' . $workspace['name'],
-            'workspace' => $workspace,
-            'members' => (new WorkspaceMemberRepository(Database::connection($this->config)))->forWorkspace((int) $id),
-            'errors' => [],
-        ]);
-    }
-
-    public function add(string $id): string
-    {
-        Csrf::requireValid();
-        $workspace = $this->workspace((int) $id);
-        $email = mb_strtolower(trim((string) ($_POST['email'] ?? '')));
-        $role = (string) ($_POST['role'] ?? 'viewer');
-
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || !in_array($role, ['owner', 'editor', 'viewer'], true)) {
-            flash('error', 'Email o ruolo non valido.');
-            redirect('/workspaces/' . (int) $id . '/members');
-        }
-
-        $pdo = Database::connection($this->config);
-        $user = (new UserRepository($pdo))->findByEmail($email);
-        if ($user === null || $user['status'] !== 'active') {
-            flash('error', 'Utente non trovato o non attivo. L’utente deve prima registrarsi e verificare l’email.');
-            redirect('/workspaces/' . (int) $id . '/members');
-        }
-
-        (new WorkspaceMemberRepository($pdo))->add((int) $workspace['id'], (int) $user['id'], $role);
-        flash('success', 'Membro aggiunto o aggiornato.');
-        redirect('/workspaces/' . (int) $id . '/members');
-    }
-
-    public function update(string $id, string $memberId): string
-    {
-        Csrf::requireValid();
-        $workspace = $this->workspace((int) $id);
-        $role = (string) ($_POST['role'] ?? 'viewer');
-        if (!in_array($role, ['owner', 'editor', 'viewer'], true)) {
-            flash('error', 'Ruolo non valido.');
-            redirect('/workspaces/' . (int) $id . '/members');
-        }
-
-        $repo = new WorkspaceMemberRepository(Database::connection($this->config));
-        $member = $repo->find((int) $workspace['id'], (int) $memberId);
-        if ($member === null) {
-            http_response_code(404);
-            return 'Membro non trovato.';
-        }
-        if ($member['role'] === 'owner' && $role !== 'owner' && $repo->countOwners((int) $workspace['id']) <= 1) {
-            flash('error', 'Non puoi declassare l’ultimo owner del workspace.');
-            redirect('/workspaces/' . (int) $id . '/members');
-        }
-
-        $repo->updateRole((int) $workspace['id'], (int) $memberId, $role);
-        flash('success', 'Ruolo del membro aggiornato.');
-        redirect('/workspaces/' . (int) $id . '/members');
-    }
-
-    public function remove(string $id, string $memberId): string
-    {
-        Csrf::requireValid();
-        $workspace = $this->workspace((int) $id);
-        $repo = new WorkspaceMemberRepository(Database::connection($this->config));
-        $member = $repo->find((int) $workspace['id'], (int) $memberId);
-        if ($member === null) {
-            http_response_code(404);
-            return 'Membro non trovato.';
-        }
-        if ($member['role'] === 'owner' && $repo->countOwners((int) $workspace['id']) <= 1) {
-            flash('error', 'Non puoi rimuovere l’ultimo owner del workspace.');
-            redirect('/workspaces/' . (int) $id . '/members');
-        }
-
-        $repo->remove((int) $workspace['id'], (int) $memberId);
-        flash('success', 'Membro rimosso dal workspace.');
-        redirect('/workspaces/' . (int) $id . '/members');
-    }
+use PDO;
+final class MemberController extends BaseController {
+ private function context(string $id):array {$p=Database::connection($this->config);$w=(new WorkspaceRepository($p))->findActive((int)$id);if(!$w){http_response_code(404);exit('Workspace non trovato');}$u=Auth::user($this->config);if((new WorkspaceRepository($p))->roleOf((int)$id,(int)$u['id'])!=='owner'){http_response_code(403);exit('Solo il proprietario può gestire i permessi.');}return [$w,$p];}
+ public function index(string $id):string{[$w,$p]=$this->context($id);return $this->view('members/index',['pageTitle'=>'Permessi workspace','workspace'=>$w,'members'=>(new WorkspaceMemberRepository($p))->forWorkspace((int)$id),'groups'=>(new GroupRepository($p))->forWorkspace((int)$id)]);}
+ public function add(string $id):string{Csrf::requireValid();[$w,$p]=$this->context($id);$email=mb_strtolower(trim((string)($_POST['email']??'')));$role=(string)($_POST['role']??'viewer');if(!filter_var($email,FILTER_VALIDATE_EMAIL)||!in_array($role,['owner','editor','viewer'],true)){http_response_code(422);return 'Dati non validi.';}$q=$p->prepare('SELECT id FROM users WHERE email=:e AND status="active" AND deleted_at IS NULL LIMIT 1');$q->execute(['e'=>$email]);$uid=$q->fetchColumn();if(!$uid){flash('error','Utente attivo non trovato.');redirect('/workspaces/'.(int)$id.'/members');}(new WorkspaceMemberRepository($p))->add((int)$id,(int)$uid,$role);flash('success','Membro aggiunto.');redirect('/workspaces/'.(int)$id.'/members');}
+ public function update(string $id,string $memberId):string{Csrf::requireValid();[$w,$p]=$this->context($id);$role=(string)($_POST['role']??'');if(!in_array($role,['owner','editor','viewer'],true)){http_response_code(422);return 'Ruolo non valido.';}$repo=new WorkspaceMemberRepository($p);$member=$repo->find((int)$id,(int)$memberId);if(!$member){http_response_code(404);return 'Membro non trovato.';}if($member['role']==='owner'&&$role!=='owner'&&$repo->countOwners((int)$id)<=1){http_response_code(422);return 'Ultimo owner non declassabile.';}$repo->updateRole((int)$id,(int)$memberId,$role);flash('success','Ruolo aggiornato.');redirect('/workspaces/'.(int)$id.'/members');}
+ public function remove(string $id,string $memberId):string{Csrf::requireValid();[$w,$p]=$this->context($id);$repo=new WorkspaceMemberRepository($p);$member=$repo->find((int)$id,(int)$memberId);if(!$member){http_response_code(404);return 'Membro non trovato.';}if($member['role']==='owner'&&$repo->countOwners((int)$id)<=1){http_response_code(422);return 'Ultimo owner non rimovibile.';}$repo->remove((int)$id,(int)$memberId);flash('success','Membro rimosso.');redirect('/workspaces/'.(int)$id.'/members');}
+ public function bulk(string $id):string{Csrf::requireValid();[$w,$p]=$this->context($id);$role=(string)($_POST['role']??'');$ids=$_POST['subject_ids']??[];if(!in_array($role,['editor','viewer'],true)||!is_array($ids)||count($ids)>200){http_response_code(422);return 'Input non valido.';}$ids=array_values(array_unique(array_map('intval',$ids)));$allowed=array_map('intval',array_column((new WorkspaceMemberRepository($p))->forWorkspace((int)$id),'user_id'));foreach($ids as $uid)if($uid<=0||!in_array($uid,$allowed,true)){http_response_code(422);return 'Utente non membro.';}$p->beginTransaction();try{$stmt=$p->prepare('UPDATE workspace_members SET role=:r WHERE workspace_id=:w AND user_id=:u AND role<>"owner"');foreach($ids as $uid)$stmt->execute(['r'=>$role,'w'=>(int)$id,'u'=>$uid]);$p->commit();}catch(\Throwable $e){$p->rollBack();throw $e;}flash('success','Ruoli assegnati ai membri selezionati.');redirect('/workspaces/'.(int)$id.'/members');}
 }

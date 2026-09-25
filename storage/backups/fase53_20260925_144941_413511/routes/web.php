@@ -19,5 +19,3 @@ $router->post('/workspaces/{id}/permissions/set',[WorkspaceAclController::class,
 $router->get('/documents/{id}/access',[DocumentAclController::class,'index'],[RequireAuth::class]);
 $router->post('/documents/{id}/access',[DocumentAclController::class,'save'],[RequireAuth::class]);
 $router->post('/documents/{id}/access/{type}/{subject}/remove',[DocumentAclController::class,'remove'],[RequireAuth::class]);
-
-$router->post('/workspaces/{id}/members/bulk',[MemberController::class,'bulk'],[RequireAuth::class]);

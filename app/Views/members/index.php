@@ -1,20 +1,4 @@
-<h1>Membri — <?= e($workspace['name']) ?></h1>
-<p class="muted">Solo gli owner possono invitare, modificare ruoli o rimuovere membri. Deve rimanere almeno un owner.</p>
-
-<form method="post" action="/workspaces/<?= (int) $workspace['id'] ?>/members/add" class="card form-card">
-    <?= \Archium\Support\Csrf::field() ?>
-    <h2>Aggiungi membro</h2>
-    <label for="email">Email utente già registrato e attivo</label>
-    <input id="email" type="email" name="email" required maxlength="190">
-    <label for="role">Ruolo nel workspace</label>
-    <select id="role" name="role"><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="owner">Owner</option></select>
-    <button type="submit">Aggiungi / aggiorna</button>
-</form>
-
-<table class="card"><tr><th>Utente</th><th>Email</th><th>Ruolo workspace</th><th>Stato</th><th>Azioni</th></tr>
-<?php foreach ($members as $member): ?>
-<tr><td><?= e($member['name']) ?></td><td><?= e($member['email']) ?></td><td>
-<form method="post" action="/workspaces/<?= (int)$workspace['id'] ?>/members/<?= (int)$member['id'] ?>/update" class="inline-form"><?= \Archium\Support\Csrf::field() ?><select name="role"><?php foreach (['owner','editor','viewer'] as $role): ?><option value="<?= $role ?>" <?= $member['role']===$role?'selected':'' ?>><?= e($role) ?></option><?php endforeach; ?></select><button class="btn-sm" type="submit">Salva</button></form>
-</td><td><?= e($member['status']) ?></td><td><form method="post" action="/workspaces/<?= (int)$workspace['id'] ?>/members/<?= (int)$member['id'] ?>/remove" class="inline-form"><?= \Archium\Support\Csrf::field() ?><button type="submit" class="btn-sm danger">Rimuovi</button></form></td></tr>
-<?php endforeach; ?></table>
-<p><a href="/workspaces">Torna ai workspace</a></p>
+<h1>Permessi workspace — <?= e($workspace['name']) ?></h1><p class="muted">I ruoli workspace regolano membership e gestione. Non concedono automaticamente visibilità dei documenti: usa anche ACL raccolta o documento. L'owner mantiene sempre accesso totale.</p>
+<section class="members-compact"><h2>Membri esistenti</h2><table class="card"><tr><th>Utente</th><th>Email</th><th>Ruolo</th><th>Azioni</th></tr><?php foreach($members as $m): ?><tr><td><?= e($m['name']) ?></td><td><?= e($m['email']) ?></td><td><?= e($m['role']) ?></td><td><form method="post" action="/workspaces/<?= (int)$workspace['id'] ?>/members/<?= (int)$m['id'] ?>/update" class="inline-form"><?= \Archium\Support\Csrf::field() ?><select name="role"><?php foreach(['viewer','editor','owner'] as $role): ?><option value="<?= e($role) ?>" <?= $role===$m['role']?'selected':'' ?>><?= e(ucfirst($role)) ?></option><?php endforeach; ?></select><button class="btn-sm">Salva</button></form> <form method="post" action="/workspaces/<?= (int)$workspace['id'] ?>/members/<?= (int)$m['id'] ?>/remove" class="inline-form"><?= \Archium\Support\Csrf::field() ?><button class="btn-sm danger">Rimuovi</button></form></td></tr><?php endforeach; ?></table></section>
+<form method="post" action="/workspaces/<?= (int)$workspace['id'] ?>/members/bulk" class="card form-card"><h2>Seleziona utenti o gruppi</h2><?= \Archium\Support\Csrf::field() ?><div class="checkbox-list"><?php foreach($members as $m): ?><label class="checkbox-row"><input type="checkbox" name="subject_ids[]" value="<?= (int)$m['user_id'] ?>" <?= $m['role']==='owner'?'disabled':'' ?>><span><?= e($m['name']) ?> — <?= e($m['email']) ?></span></label><?php endforeach; ?></div><label>Ruolo</label><select name="role"><option value="viewer">Viewer</option><option value="editor">Editore</option></select><button>Applica agli utenti selezionati</button></form>
+<form method="post" action="/workspaces/<?= (int)$workspace['id'] ?>/members/add" class="card form-card"><?= \Archium\Support\Csrf::field() ?><h2>Aggiungi membro registrato</h2><label>Email</label><input type="email" name="email" required><label>Ruolo</label><select name="role"><option value="viewer">Viewer</option><option value="editor">Editore</option><option value="owner">Owner</option></select><button>Aggiungi</button></form><h2>Gruppi</h2><p><a href="/groups">Gestisci gruppi</a></p><ul><?php foreach($groups as $g): ?><li><?= e($g['name']) ?> — <?= (int)$g['member_count'] ?> membri</li><?php endforeach; ?></ul>
